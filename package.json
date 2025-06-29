@@ -1,0 +1,32 @@
+{
+  "name": "apple-wallet-pass-generator",
+  "version": "1.0.0",
+  "description": "Personal card management system for Apple Wallet",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "generate-pass": "node generatePass.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.6",
+    "canvas": "^2.11.2",
+    "archiver": "^6.0.1",
+    "crypto": "^1.0.1",
+    "fs-extra": "^11.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "apple-wallet",
+    "pkpass",
+    "personal-cards",
+    "aadhar",
+    "pan"
+  ],
+  "author": "Krishna Chaitanya",
+  "license": "MIT"
+} 

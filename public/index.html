@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Wallet Pass Generator - Personal Cards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 40px;
+        }
+
+        .form-section {
+            flex: 1;
+        }
+
+        .preview-section {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4A90E2;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 20px;
+            border: 2px dashed #4A90E2;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .file-upload-label:hover {
+            background: #e3f2fd;
+            border-color: #357ABD;
+        }
+
+        .file-upload-label i {
+            font-size: 2rem;
+            color: #4A90E2;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4A90E2;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .card-preview {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 30px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card-preview h3 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .card-preview p {
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Apple Wallet Preview Styles */
+        .wallet-preview {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .wallet-preview-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .wallet-preview-header h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .wallet-preview-header p {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .pass-preview {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+
+        .pass-strip {
+            height: 120px;
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .pass-strip-custom {
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .pass-strip-content {
+            color: white;
+            flex: 1;
+        }
+
+        .pass-strip-content h4 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .pass-strip-content p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .pass-strip-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .pass-details {
+            padding: 15px 20px;
+        }
+
+        .pass-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .pass-detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .pass-detail-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .pass-qr {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .qr-placeholder {
+            width: 60px;
+            height: 60px;
+            background: #333;
+            border-radius: 8px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .preview-placeholder {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .preview-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .preview-section {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Apple Wallet Pass Generator</h1>
+            <p>Create personalized cards for your Apple Wallet</p>
+        </div>
+
+        <div class="content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('custom')">Custom Image</button>
+                <button class="tab" onclick="switchTab('default')">Default Template</button>
+            </div>
+
+            <div class="alert" id="alert"></div>
+
+            <div class="main-content">
+                <!-- Form Section -->
+                <div class="form-section">
+                    <!-- Custom Image Tab -->
+                    <div id="custom-tab" class="tab-content active">
+                        <form id="customForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cardType">Card Type</label>
+                                    <select id="cardType" name="cardType" required>
+                                        <option value="">Select card type</option>
+                                        <option value="Aadhar Card">Aadhar Card</option>
+                                        <option value="PAN Card">PAN Card</option>
+                                        <option value="Driving License">Driving License</option>
+                                        <option value="Passport">Passport</option>
+                                        <option value="Credit Card">Credit Card</option>
+                                        <option value="Debit Card">Debit Card</option>
+                                        <option value="Membership Card">Membership Card</option>
+                                        <option value="Custom">Custom</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cardName">Card Name</label>
+                                    <input type="text" id="cardName" name="cardName" placeholder="e.g., My Aadhar Card" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cardHolder">Card Holder Name</label>
+                                    <input type="text" id="cardHolder" name="cardHolder" placeholder="Your full name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cardNumber">Card Number (Optional)</label>
+                                    <input type="text" id="cardNumber" name="cardNumber" placeholder="Card number (will be masked)">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="additionalInfo">Additional Information (Optional)</label>
+                                <textarea id="additionalInfo" name="additionalInfo" rows="3" placeholder="Any additional details about the card..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Card Image</label>
+                                <div class="file-upload">
+                                    <input type="file" id="image" name="image" accept="image/*" required>
+                                    <label for="image" class="file-upload-label">
+                                        <i>📷</i>
+                                        <div>Click to upload your card image</div>
+                                        <div style="font-size: 0.9rem; opacity: 0.7; margin-top: 5px;">
+                                            Recommended: 624x246 pixels (PNG/JPG)
+                                        </div>
+                                    </label>
+                                </div>
+                                <img id="imagePreview" class="preview-image" alt="Preview">
+                            </div>
+
+                            <button type="submit" class="btn" id="generateBtn">
+                                🎫 Generate Apple Wallet Pass
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Default Template Tab -->
+                    <div id="default-tab" class="tab-content">
+                        <form id="defaultForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="defaultCardType">Card Type</label>
+                                    <select id="defaultCardType" name="cardType" required>
+                                        <option value="">Select card type</option>
+                                        <option value="Aadhar Card">Aadhar Card</option>
+                                        <option value="PAN Card">PAN Card</option>
+                                        <option value="Driving License">Driving License</option>
+                                        <option value="Passport">Passport</option>
+                                        <option value="Credit Card">Credit Card</option>
+                                        <option value="Debit Card">Debit Card</option>
+                                        <option value="Membership Card">Membership Card</option>
+                                        <option value="Custom">Custom</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="defaultCardName">Card Name</label>
+                                    <input type="text" id="defaultCardName" name="cardName" placeholder="e.g., My Aadhar Card" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="defaultCardHolder">Card Holder Name</label>
+                                    <input type="text" id="defaultCardHolder" name="cardHolder" placeholder="Your full name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="defaultCardNumber">Card Number (Optional)</label>
+                                    <input type="text" id="defaultCardNumber" name="cardNumber" placeholder="Card number (will be masked)">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="defaultAdditionalInfo">Additional Information (Optional)</label>
+                                <textarea id="defaultAdditionalInfo" name="additionalInfo" rows="3" placeholder="Any additional details about the card..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-secondary" id="generateDefaultBtn">
+                                🎫 Generate with Default Template
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Generating your Apple Wallet pass...</p>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div class="preview-section">
+                    <div class="wallet-preview">
+                        <div class="wallet-preview-header">
+                            <h3>📱 Apple Wallet Preview</h3>
+                            <p>How your card will look</p>
+                        </div>
+                        
+                        <div id="passPreview">
+                            <div class="preview-placeholder">
+                                <i>📱</i>
+                                <div>Fill in the form to see a live preview</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Update preview
+            updatePreview();
+        }
+
+        // Image preview
+        document.getElementById('image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    updatePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form submission for custom image
+        document.getElementById('customForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await generatePass('/generate-pass', new FormData(this));
+        });
+
+        // Form submission for default template
+        document.getElementById('defaultForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await generatePass('/generate-default-pass', new FormData(this));
+        });
+
+        // Generate pass function
+        async function generatePass(endpoint, formData) {
+            const loading = document.getElementById('loading');
+            const alert = document.getElementById('alert');
+            
+            try {
+                loading.style.display = 'block';
+                alert.style.display = 'none';
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = formData.get('cardName') + '.pkpass';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    showAlert('✅ Pass generated successfully! Check your downloads.', 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert('❌ ' + (error.error || 'Failed to generate pass'), 'error');
+                }
+            } catch (error) {
+                showAlert('❌ Network error. Please try again.', 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Update preview function
+        function updatePreview() {
+            const cardType = document.getElementById('cardType').value || document.getElementById('defaultCardType').value;
+            const cardName = document.getElementById('cardName').value || document.getElementById('defaultCardName').value;
+            const cardHolder = document.getElementById('cardHolder').value || document.getElementById('defaultCardHolder').value;
+            const cardNumber = document.getElementById('cardNumber').value || document.getElementById('defaultCardNumber').value;
+            const additionalInfo = document.getElementById('additionalInfo').value || document.getElementById('defaultAdditionalInfo').value;
+            const imageFile = document.getElementById('image').files[0];
+            
+            const previewContainer = document.getElementById('passPreview');
+            
+            if (!cardType || !cardName || !cardHolder) {
+                previewContainer.innerHTML = `
+                    <div class="preview-placeholder">
+                        <i>📱</i>
+                        <div>Fill in the form to see a live preview</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Create pass preview HTML
+            let stripClass = 'pass-strip';
+            let stripStyle = '';
+            
+            if (imageFile && document.getElementById('imagePreview').style.display !== 'none') {
+                stripClass = 'pass-strip-custom';
+                stripStyle = `background-image: url('${document.getElementById('imagePreview').src}')`;
+            }
+
+            const maskedNumber = cardNumber ? cardNumber.replace(/\d(?=\d{4})/g, '*') : '';
+
+            previewContainer.innerHTML = `
+                <div class="pass-preview">
+                    <div class="${stripClass}" style="${stripStyle}">
+                        <div class="pass-strip-content">
+                            <h4>${cardName}</h4>
+                            <p>${cardType}</p>
+                            <p>${cardHolder}</p>
+                            ${maskedNumber ? `<p>${maskedNumber}</p>` : ''}
+                        </div>
+                        <div class="pass-strip-icon">
+                            ${getCardIcon(cardType)}
+                        </div>
+                    </div>
+                    <div class="pass-details">
+                        <div class="pass-detail-row">
+                            <span class="pass-detail-label">Type:</span>
+                            <span class="pass-detail-value">${cardType}</span>
+                        </div>
+                        <div class="pass-detail-row">
+                            <span class="pass-detail-label">Holder:</span>
+                            <span class="pass-detail-value">${cardHolder}</span>
+                        </div>
+                        ${cardNumber ? `
+                        <div class="pass-detail-row">
+                            <span class="pass-detail-label">Number:</span>
+                            <span class="pass-detail-value">${maskedNumber}</span>
+                        </div>
+                        ` : ''}
+                        ${additionalInfo ? `
+                        <div class="pass-detail-row">
+                            <span class="pass-detail-label">Info:</span>
+                            <span class="pass-detail-value">${additionalInfo.substring(0, 20)}${additionalInfo.length > 20 ? '...' : ''}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="pass-qr">
+                        <div class="qr-placeholder">QR</div>
+                        <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Scan to identify</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get card icon based on type
+        function getCardIcon(cardType) {
+            const icons = {
+                'Aadhar Card': '🆔',
+                'PAN Card': '📄',
+                'Driving License': '🚗',
+                'Passport': '📘',
+                'Credit Card': '💳',
+                'Debit Card': '💳',
+                'Membership Card': '🎫',
+                'Custom': '📋'
+            };
+            return icons[cardType] || '📋';
+        }
+
+        // Add event listeners for real-time updates
+        const formFields = [
+            'cardType', 'cardName', 'cardHolder', 'cardNumber', 'additionalInfo',
+            'defaultCardType', 'defaultCardName', 'defaultCardHolder', 'defaultCardNumber', 'defaultAdditionalInfo'
+        ];
+
+        formFields.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', updatePreview);
+                element.addEventListener('change', updatePreview);
+            }
+        });
+
+        // Initial preview update
+        updatePreview();
+    </script>
+</body>
+</html> 
