@@ -186,7 +186,7 @@ const signManifest = (manifestJson) => {
 };
 
 // Generate the .pkpass file
-const generatePass = async (passData) => {
+const generatePass = async (passData, useCustomJson = false) => {
   try {
     ensureDirectories();
     
@@ -194,8 +194,15 @@ const generatePass = async (passData) => {
     const passDir = path.join('passes', passId);
     await fs.ensureDir(passDir);
 
-    // Create pass.json
-    const passJson = createPassJson(passData);
+    // Use custom pass.json if provided
+    let passJson;
+    if (useCustomJson && passData.customPassJson) {
+      passJson = passData.customPassJson;
+      // Optionally inject a new serialNumber or unique fields if missing
+      if (!passJson.serialNumber) passJson.serialNumber = passId;
+    } else {
+      passJson = createPassJson(passData);
+    }
     const passJsonPath = path.join(passDir, 'pass.json');
     await fs.writeJson(passJsonPath, passJson, { spaces: 2 });
 
@@ -238,7 +245,7 @@ const generatePass = async (passData) => {
     await fs.writeFile(signaturePath, signature);
 
     // Create .pkpass file
-    const pkpassPath = path.join('passes', `${passData.cardName.replace(/[^a-zA-Z0-9]/g, '_')}_${passId}.pkpass`);
+    const pkpassPath = path.join('passes', `${(passJson.serialNumber || 'custom')}_${passId}.pkpass`);
     const output = fs.createWriteStream(pkpassPath);
     const archive = archiver('zip', { zlib: { level: 9 } });
 

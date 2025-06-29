@@ -114,6 +114,42 @@ app.post('/generate-default-pass', async (req, res) => {
   }
 });
 
+// Generate custom pass
+app.post('/generate-custom-pass', upload.single('image'), async (req, res) => {
+  try {
+    const { json } = req.body;
+    if (!json) {
+      return res.status(400).json({ error: 'Missing pass.json data' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please upload an image' });
+    }
+    let passJson;
+    try {
+      passJson = JSON.parse(json);
+    } catch (err) {
+      return res.status(400).json({ error: 'Invalid JSON: ' + err.message });
+    }
+    // Use the provided passJson and image
+    const passData = {
+      customPassJson: passJson,
+      imagePath: req.file.path
+    };
+    const pkpassPath = await generatePass(passData, true); // true = use custom JSON
+    res.download(pkpassPath, `custom-pass.pkpass`, (err) => {
+      if (err) {
+        console.error('Download error:', err);
+      }
+      setTimeout(() => {
+        fs.remove(pkpassPath).catch(console.error);
+      }, 5000);
+    });
+  } catch (error) {
+    console.error('Error generating custom pass:', error);
+    res.status(500).json({ error: 'Failed to generate pass' });
+  }
+});
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {

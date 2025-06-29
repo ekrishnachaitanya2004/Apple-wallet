@@ -449,6 +449,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('custom')">Custom Image</button>
                 <button class="tab" onclick="switchTab('default')">Default Template</button>
+                <button class="tab" onclick="switchTab('json')">Custom pass.json</button>
             </div>
 
             <div class="alert" id="alert"></div>
@@ -563,6 +564,33 @@
                         </form>
                     </div>
 
+                    <!-- Custom pass.json Tab -->
+                    <div id="json-tab" class="tab-content">
+                        <form id="jsonForm">
+                            <div class="form-group">
+                                <label for="jsonInput">Paste your pass.json here</label>
+                                <textarea id="jsonInput" name="jsonInput" rows="16" placeholder="Paste your pass.json here..." required style="font-family: monospace;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Card Image (strip.png)</label>
+                                <div class="file-upload">
+                                    <input type="file" id="jsonImage" name="image" accept="image/*" required>
+                                    <label for="jsonImage" class="file-upload-label">
+                                        <i>📷</i>
+                                        <div>Click to upload your card image</div>
+                                        <div style="font-size: 0.9rem; opacity: 0.7; margin-top: 5px;">
+                                            Recommended: 624x246 pixels (PNG/JPG)
+                                        </div>
+                                    </label>
+                                </div>
+                                <img id="jsonImagePreview" class="preview-image" alt="Preview">
+                            </div>
+                            <button type="submit" class="btn btn-secondary" id="generateJsonBtn">
+                                🎫 Generate from pass.json
+                            </button>
+                        </form>
+                    </div>
+
                     <div class="loading" id="loading">
                         <div class="spinner"></div>
                         <p>Generating your Apple Wallet pass...</p>
@@ -592,15 +620,10 @@
     <script>
         // Tab switching
         function switchTab(tabName) {
-            // Update tab buttons
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
-
-            // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(tabName + '-tab').classList.add('active');
-            
-            // Update preview
             updatePreview();
         }
 
@@ -629,6 +652,42 @@
         document.getElementById('defaultForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             await generatePass('/generate-default-pass', new FormData(this));
+        });
+
+        // Image preview for custom pass.json
+        document.getElementById('jsonImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('jsonImagePreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form submission for custom pass.json
+        document.getElementById('jsonForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const jsonInput = document.getElementById('jsonInput').value;
+            let parsedJson;
+            try {
+                parsedJson = JSON.parse(jsonInput);
+            } catch (err) {
+                showAlert('❌ Invalid JSON: ' + err.message, 'error');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('json', jsonInput);
+            const imageFile = document.getElementById('jsonImage').files[0];
+            if (!imageFile) {
+                showAlert('❌ Please upload an image.', 'error');
+                return;
+            }
+            formData.append('image', imageFile);
+            await generatePass('/generate-custom-pass', formData);
         });
 
         // Generate pass function
